@@ -111,7 +111,7 @@ public class SwiftMultiImagePickerPlugin: NSObject, FlutterPlugin {
             //     if (!selectionCharacter.isEmpty) {
             //         vc.selectionCharacter = Character(selectionCharacter)
             //     }
-            }
+            //}
 
             UIViewController.topViewController()?.presentImagePickerController(vc, animated: true,
                 select: { (asset: PHAsset) -> Void in
