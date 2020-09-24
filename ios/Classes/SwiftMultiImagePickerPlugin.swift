@@ -69,13 +69,18 @@ public class SwiftMultiImagePickerPlugin: NSObject, FlutterPlugin {
             }
             let arguments = call.arguments as! Dictionary<String, AnyObject>
             let maxImages = arguments["maxImages"] as! Int
-            let enableCamera = arguments["enableCamera"] as! Bool
+            let mediaType = arguments["mediaType"] as! String
             let options = arguments["iosOptions"] as! Dictionary<String, String>
             let selectedAssets = arguments["selectedAssets"] as! Array<String>
             var totalImagesSelected = 0
             
             vc.settings.selection.max = maxImages
-            vc.settings.fetch.assets.supportedMediaTypes = [.image, .video]
+
+            if (mediaType == "video") {
+                vc.settings.fetch.assets.supportedMediaTypes = [.video]
+            } else {
+                vc.settings.fetch.assets.supportedMediaTypes = [.image]
+            }
 
             if let backgroundColor = options["backgroundColor"] {
                 if (!backgroundColor.isEmpty) {
@@ -113,7 +118,7 @@ public class SwiftMultiImagePickerPlugin: NSObject, FlutterPlugin {
             //     }
             //}
 
-            UIViewController.topViewController()?.presentImagePickerController(vc, animated: true,
+            UIViewController.topViewController()?.presentImagePicker(vc, animated: true,
                 select: { (asset: PHAsset) -> Void in
                     totalImagesSelected += 1
                     
