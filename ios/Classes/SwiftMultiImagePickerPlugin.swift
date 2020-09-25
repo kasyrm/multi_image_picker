@@ -121,7 +121,6 @@ public class SwiftMultiImagePickerPlugin: NSObject, FlutterPlugin {
             UIViewController.topViewController()?.presentImagePicker(vc, animated: true,
                 select: { (asset: PHAsset) -> Void in
                     totalImagesSelected += 1
-                    
                     if let autoCloseOnSelectionLimit = options["autoCloseOnSelectionLimit"] {
                         if (!autoCloseOnSelectionLimit.isEmpty && autoCloseOnSelectionLimit == "true") {
                             if (maxImages == totalImagesSelected) {
@@ -187,35 +186,46 @@ public class SwiftMultiImagePickerPlugin: NSObject, FlutterPlugin {
             let arguments = call.arguments as! Dictionary<String, AnyObject>
             let identifier = arguments["identifier"] as! String
             let quality = arguments["quality"] as! Int
+            let mediaType = arguments["mediaType"] as! String
+
             let compressionQuality = Float(quality) / Float(100)
             let manager = PHImageManager.default()
             let options = PHImageRequestOptions()
-
+            
             options.deliveryMode = PHImageRequestOptionsDeliveryMode.highQualityFormat
             options.isSynchronous = false
             options.isNetworkAccessAllowed = true
             options.version = .current
-
             let assets: PHFetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil)
 
             if (assets.count > 0) {
                 let asset: PHAsset = assets[0];
-
-                let ID: PHImageRequestID = manager.requestImage(
+                let ID: PHImageRequestID
+                if mediaType == "video" {
+                    ID = PHImageManager.default().requestAVAsset(forVideo: asset,
+                            options: nil) { (asset, audioMix, info) in
+                            if  let asset = asset as? AVURLAsset,
+                                let data = NSData(contentsOf: asset.url) {
+                                self.messenger.send(onChannel: "multi_image_picker/image/" + identifier + ".original", message: data as Data)
+                            }
+                        }
+                  
+                } else {
+                    ID = manager.requestImage(
                     for: asset,
                     targetSize: PHImageManagerMaximumSize,
                     contentMode: PHImageContentMode.aspectFill,
                     options: options,
                     resultHandler: {
-                        (image: UIImage?, info) in
+                        (image: UIImage?, info) in                             
                         self.messenger.send(onChannel: "multi_image_picker/image/" + identifier + ".original", message: image!.jpegData(compressionQuality: CGFloat(compressionQuality)))
-                })
+                    })
+                }           
 
                 if(PHInvalidImageRequestID != ID) {
                     return result(true);
                 }
             }
-            
             return result(FlutterError(code: "ASSET_DOES_NOT_EXIST", message: "The requested image does not exist.", details: nil))
         case "requestMetadata":
             let arguments = call.arguments as! Dictionary<String, AnyObject>

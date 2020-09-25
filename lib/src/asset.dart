@@ -115,7 +115,7 @@ class Asset {
   /// The method returns a Future with the [ByteData] for the image,
   /// as well as storing it in the _imageData property which can be requested
   /// later again, without need to call this method again.
-  Future<ByteData> getByteData({int quality = 100}) async {
+  Future<ByteData> getByteData(String mediaType, {int quality = 100}) async {
     if (quality < 0 || quality > 100) {
       throw new ArgumentError.value(
           quality, 'quality should be in range 0-100');
@@ -130,7 +130,7 @@ class Asset {
       return message;
     });
 
-    await MultiImagePicker.requestOriginal(_identifier, quality);
+    await MultiImagePicker.requestOriginal(_identifier, quality, mediaType);
     return completer.future;
   }
 
@@ -143,7 +143,7 @@ class Asset {
     'This method will be deprecated in the next major release. Please use getByteData method instead.',
   )
   Future<ByteData> requestOriginal({int quality = 100}) {
-    return getByteData(quality: quality);
+    return getByteData('photo', quality: quality, );
   }
 
   @Deprecated(
